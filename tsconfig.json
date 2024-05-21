@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    // Enable latest features
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+
+    // Bundler mode
+    "moduleResolution": "Node",
+    "outDir": "bin"
+  }
+}
