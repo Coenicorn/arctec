@@ -415,7 +415,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
             data!.player.stop();
 
             guildPlayers.delete(guildId);
-        }, 5000);
+        }, 60000);
     } else if (data.timer !== null) {
         // try and stop the timer if someone joins
         clearTimeout(data.timer);
