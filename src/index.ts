@@ -173,7 +173,7 @@ registerCommand({
             const channel = member.voice.channel as VoiceChannel | null;
 
             if (!channel) {
-                await interaction.reply("you are not in any voice channels");
+                await interaction.reply(user.toString() + "you are not in any voice channels");
 
                 return;
             }
