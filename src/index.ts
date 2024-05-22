@@ -377,26 +377,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     let guildId = oldState.guild.id;
-    let channelId;
-
+    
     let data = guildPlayers.get(guildId);
 
     // if nothing is playing, do nothing
     if (!data) return;
 
-    let channelSize = -1;
+    // if the bot is moved to a different channel, update the currentChannel
+    if (newState.member && newState.member.id == clientId) {
+        data.channelId = newState.channelId!;
+    }
+
 
     // if something IS playing
+    const channel = await oldState.guild.channels.fetch(data.channelId, { cache: false })
 
-    // channel event happened in another channel
-    if (data.channelId !== oldState.channelId && data.channelId !== newState.channelId) return;
+    if (channel == null) {
+        console.log("failed to fetch channel " + data.channelId);
 
-    const channel = await oldState.guild.channels
-        .fetch(data.channelId, { cache: false })
-        .then((channel) => {
-            channelSize =
-                (channel?.members as Collection<string, GuildMember>).size - 1; // subtract one for bot user
-        });
+        return;
+    }
+
+    const channelSize = (channel.members as Collection<string, GuildMember>).size - 1;
 
     if (channelSize < 0) {
         console.log(`can't find channel ${data.channelId}`);
