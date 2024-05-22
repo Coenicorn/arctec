@@ -22,8 +22,8 @@ import {
     AudioPlayer,
     VoiceConnection,
 } from "@discordjs/voice";
-import { createDiscordJSAdapter } from "./adapter.js";
 import * as dotenv from "dotenv";
+import { setSyntheticTrailingComments } from "typescript";
 
 dotenv.config();
 
@@ -54,7 +54,7 @@ async function connectToChannel(
     const connection = joinVoiceChannel({
         channelId: channel.id,
         guildId: channel.guild.id,
-        adapterCreator: createDiscordJSAdapter(channel),
+        adapterCreator: channel.guild.voiceAdapterCreator,
     });
 
     try {
@@ -71,6 +71,7 @@ interface AudioGuildData {
     connection: VoiceConnection;
     nowPlaying: string /* name of the currently playing stream */;
     channelId: string /* channel ID of the channel currently playing in */;
+    timer: ReturnType<typeof setTimeout> | null;
 }
 
 const guildPlayers: Map<string, AudioGuildData> = new Collection();
@@ -192,7 +193,9 @@ registerCommand({
                     connection: await connectToChannel(channel),
                     nowPlaying: "",
                     channelId: channel.id,
+                    timer: null,
                 };
+                guildPlayers.set(guildid, data);
             }
 
             if (data.channelId !== channel.id) {
@@ -205,7 +208,7 @@ registerCommand({
             if (data.nowPlaying === url.name) {
                 // song is currenly being played in the same channel, do nothing
                 interaction.reply(
-                    user.toString() + ` Already playing ${data.nowPlaying}!`
+                    user.toString() + ` Already playing ___${data.nowPlaying}___!`
                 );
 
                 return;
@@ -223,8 +226,8 @@ registerCommand({
             data.connection.subscribe(data.player);
             data.nowPlaying = url.name;
 
-            // update stored data
-            guildPlayers.set(guildid, data);
+            // 0 user timeout
+            data.connection.on("stateChange", (oldState, newState) => {});
 
             interaction.reply(user.toString() + ` Playing ___${url.name}___`);
         } catch (e) {
@@ -279,7 +282,7 @@ registerCommand({
         const user = interaction.user;
 
         if (!guildid) {
-            interaction.reply("Not playing anything :/");
+            interaction.reply(user.toString() + " Not playing anything :/");
             return;
         }
 
@@ -369,5 +372,51 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 ephemeral: true,
             });
         }
+    }
+});
+
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+    let guildId = oldState.guild.id;
+    let channelId;
+
+    let data = guildPlayers.get(guildId);
+
+    // if nothing is playing, do nothing
+    if (!data) return;
+
+    let channelSize = -1;
+
+    // if something IS playing
+
+    // channel event happened in another channel
+    if (data.channelId !== oldState.channelId && data.channelId !== newState.channelId) return;
+
+    const channel = await oldState.guild.channels
+        .fetch(data.channelId, { cache: false })
+        .then((channel) => {
+            channelSize =
+                (channel?.members as Collection<string, GuildMember>).size - 1; // subtract one for bot user
+        });
+
+    if (channelSize < 0) {
+        console.log(`can't find channel ${data.channelId}`);
+
+        return;
+    }
+
+    if (channelSize === 0) {
+        // if there's nobody in the channel, set a timer for 1 minute and leave if it expires
+        if (data.timer) clearTimeout(data.timer);
+
+        data.timer = setTimeout(() => {
+            data!.connection.destroy();
+            data!.player.stop();
+
+            guildPlayers.delete(guildId);
+        }, 5000);
+    } else if (data.timer !== null) {
+        // try and stop the timer if someone joins
+        clearTimeout(data.timer);
+        data.timer = null;
     }
 });
