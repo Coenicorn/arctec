@@ -1,15 +1,7 @@
 # entarctic
 
-To install dependencies:
+(Primitive) Discord bot for listening to Pinguin radio (https://pinguinradio.com/)
 
-```bash
-bun install
-```
+## disclaimer
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.0.30. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+This bot is not one created by the pinguinradio team, rather by someone who just enjoys listening to it :). Do with that what you will
