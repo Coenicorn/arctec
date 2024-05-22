@@ -173,7 +173,7 @@ registerCommand({
             const channel = member.voice.channel as VoiceChannel | null;
 
             if (!channel) {
-                await interaction.reply(user.toString() + "you are not in any voice channels");
+                await interaction.reply(user.toString() + " You are not in any voice channels");
 
                 return;
             }
@@ -197,6 +197,7 @@ registerCommand({
                 // user is in another channel, move
                 await data.connection.destroy();
                 data.connection = await connectToChannel(channel);
+				data.connection.subscribe(data.player);
             }
 
             if (data.nowPlaying === url.name) {
