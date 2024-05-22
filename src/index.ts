@@ -10,7 +10,7 @@ import {
 	AudioPlayer,
 	VoiceConnection
 } from "@discordjs/voice"
-import { createDiscordJSAdapter } from "./adapter";
+import { createDiscordJSAdapter } from "./adapter.js";
 import * as dotenv from "dotenv"
 
 dotenv.config();

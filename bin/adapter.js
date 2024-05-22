@@ -1,5 +1,5 @@
 import { GatewayDispatchEvents, } from 'discord-api-types/v10';
-import { Client, Guild, Events, Status } from 'discord.js';
+import { Events, Status } from 'discord.js';
 const adapters = new Map();
 const trackedClients = new Set();
 const trackedShards = new Map();
@@ -13,18 +13,21 @@ function trackClient(client) {
         return;
     trackedClients.add(client);
     client.ws.on(GatewayDispatchEvents.VoiceServerUpdate, (payload) => {
-        adapters.get(payload.guild_id)?.onVoiceServerUpdate(payload);
+        var _a;
+        (_a = adapters.get(payload.guild_id)) === null || _a === void 0 ? void 0 : _a.onVoiceServerUpdate(payload);
     });
     client.ws.on(GatewayDispatchEvents.VoiceStateUpdate, (payload) => {
-        if (payload.guild_id && payload.session_id && payload.user_id === client.user?.id) {
-            adapters.get(payload.guild_id)?.onVoiceStateUpdate(payload);
+        var _a, _b;
+        if (payload.guild_id && payload.session_id && payload.user_id === ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id)) {
+            (_b = adapters.get(payload.guild_id)) === null || _b === void 0 ? void 0 : _b.onVoiceStateUpdate(payload);
         }
     });
     client.on(Events.ShardDisconnect, (_, shardId) => {
+        var _a;
         const guilds = trackedShards.get(shardId);
         if (guilds) {
             for (const guildID of guilds.values()) {
-                adapters.get(guildID)?.destroy();
+                (_a = adapters.get(guildID)) === null || _a === void 0 ? void 0 : _a.destroy();
             }
         }
         trackedShards.delete(shardId);

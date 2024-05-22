@@ -2,7 +2,6 @@
 // const { clientId, guildId, token } = require('./config.json');
 // const fs = require('node:fs');
 // const path = require('node:path');
-import { REST, Routes } from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 const token = process.env.TOKEN;
