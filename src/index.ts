@@ -109,6 +109,7 @@ registerCommand({
 		try {
 			const guildid = interaction.guildId!;
 			const member = interaction.member as GuildMember | null;
+			const user = interaction.user;
 
 			// dunno how this would fail, check for it nonetheless
 			if (!member) {
@@ -131,14 +132,12 @@ registerCommand({
 
 			if (data?.nowPlaying === url.name)
 			{
-				interaction.reply({
-					content: `Already playing ___${url.name}___`
-				});
+				interaction.reply(user.toString() + ` Already playing ___${url.name}___`);
 
 				return;
 			} else {
 				// new channel has been picked
-				interaction.reply(`Playing ___${url.name}___`);
+				interaction.reply(user.toString() + ` Playing ___${url.name}___`);
 			}
 
 			if (!data) {
@@ -175,16 +174,17 @@ registerCommand({
 		.setDescription('disconnects from voice channel'),
 	async execute(interaction: ChatInputCommandInteraction) {
 		const guildId = interaction.guildId!;
+		const user = interaction.user;
 
 		const guildPlayer = guildPlayers.get(guildId);
 
 		if (guildPlayer === undefined) {
-			interaction.reply({content: "not in a voice channel", ephemeral: true});
+			interaction.reply({content: user.toString() + " Not in a voice channel", ephemeral: true});
 		} else {
 			guildPlayer.connection.destroy();
 			guildPlayer.player.stop();
 
-			interaction.reply("done!");
+			interaction.reply(user.toString() + " Done!");
 		}
 	}
 });
@@ -195,6 +195,7 @@ registerCommand({
 		.setDescription('list currently playing radio channel'),
 	async execute(interaction: ChatInputCommandInteraction) {
 		const guildid = interaction.guildId;
+		const user = interaction.user;
 
 		if (!guildid) {
 			interaction.reply('Not playing anything :/');
@@ -204,11 +205,11 @@ registerCommand({
 		const data = guildPlayers.get(guildid!);
 
 		if (!data) {
-			interaction.reply('Not playing anything :/');
+			interaction.reply(user.toString() + ' Not playing anything :/');
 			return;
 		}
 
-		interaction.reply(`Currently playing ___${data?.nowPlaying}___`);
+		interaction.reply(user.toString() + ` Currently playing ___${data?.nowPlaying}___`);
 
 		
 	}
