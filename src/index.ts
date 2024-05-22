@@ -237,6 +237,7 @@ registerCommand({
     async execute(interaction: ChatInputCommandInteraction) {
         const guildId = interaction.guildId!;
         const user = interaction.user;
+		const channel = (interaction.member as GuildMember | null)?.voice.channel;
 
         const data = guildPlayers.get(guildId);
 
@@ -246,7 +247,13 @@ registerCommand({
                 content: user.toString() + " Not in a voice channel",
                 ephemeral: true,
             });
-        } else {
+        } else if (channel?.id !== data.channelId) {
+			// user is not in same voice channel as bot
+			interaction.reply({
+				content: user.toString() + " You are not in the same channel as the bot",
+				ephemeral: true
+			});
+		} else {
             // stop playing
             data.connection.destroy();
             data.player.stop();
