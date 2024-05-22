@@ -23,7 +23,6 @@ import {
     VoiceConnection,
 } from "@discordjs/voice";
 import * as dotenv from "dotenv";
-import { setSyntheticTrailingComments } from "typescript";
 
 dotenv.config();
 
@@ -132,6 +131,43 @@ const radioURLS: Array<RadioURL> = [
     },
 ];
 
+async function moveVoiceChannel(channel: VoiceChannel, data: AudioGuildData) {
+    await data.connection.destroy();
+    data.connection = await connectToChannel(channel);
+    data.connection.subscribe(data.player);
+}
+
+async function createAudioGuildData(channel: VoiceChannel) {
+    return {
+        player: createAudioPlayer(),
+        connection: await connectToChannel(channel),
+        nowPlaying: "",
+        channelId: channel.id,
+        timer: null,
+    };
+}
+
+async function playAudio(
+    url: RadioURL,
+    data: AudioGuildData
+): Promise<Error | void> {
+    if (data.nowPlaying === url.name)
+        return new Error(` Already playing ___${data.nowPlaying}___!`);
+
+    const resource = createAudioResource(url.value, {
+        inputType: StreamType.Arbitrary,
+    });
+
+    data.player.play(resource);
+
+    entersState(data.player, AudioPlayerStatus.Playing, 5000);
+
+    data.connection.subscribe(data.player);
+    data.nowPlaying = url.name;
+
+    return;
+}
+
 registerCommand({
     data: new SlashCommandBuilder()
         .setName("radio")
@@ -188,48 +224,77 @@ registerCommand({
 
             // if nothing's currently playing, create new data object
             if (data === undefined) {
-                data = {
-                    player: createAudioPlayer(),
-                    connection: await connectToChannel(channel),
-                    nowPlaying: "",
-                    channelId: channel.id,
-                    timer: null,
-                };
+                data = await createAudioGuildData(channel);
+
+                // update the stored data object
                 guildPlayers.set(guildid, data);
             }
 
-            if (data.channelId !== channel.id) {
-                // user is in another channel, move
-                await data.connection.destroy();
-                data.connection = await connectToChannel(channel);
-                data.connection.subscribe(data.player);
-            }
+            if (data.channelId !== channel.id)
+                await moveVoiceChannel(channel, data);
 
-            if (data.nowPlaying === url.name) {
-                // song is currenly being played in the same channel, do nothing
-                interaction.reply(
-                    user.toString() + ` Already playing ___${data.nowPlaying}___!`
-                );
+            playAudio(url, data)
+                .catch((reason) =>
+                    interaction.reply(user.toString() + " " + reason)
+                )
+                .then(() => {
+                    interaction.reply(
+                        user.toString() + ` Playing ___${url.name}___`
+                    );
+                });
+        } catch (e) {
+            console.error(e);
+        }
+    },
+});
+
+registerCommand({
+    data: new SlashCommandBuilder()
+        .setName("stream")
+        .setDescription("stream a custom audio stream url")
+        .addStringOption((input) =>
+            input
+                .setRequired(true)
+                .setName("url")
+                .setDescription("stream url endpoint")
+        ),
+    async execute(interaction: ChatInputCommandInteraction) {
+        try {
+            const guildid = interaction.guildId;
+            const user = interaction.user;
+            const member = interaction.member as GuildMember;
+            const channel = member.voice.channel as VoiceChannel;
+
+            if (guildid === null) {
+                console.log("failed to fetch guild");
 
                 return;
             }
 
-            // black magic 0_0
-            const resource = createAudioResource(url.value, {
-                inputType: StreamType.Arbitrary,
-            });
+            const streamUrl = interaction.options.getString("url", true);
 
-            data.player.play(resource);
+            const url: RadioURL = {
+                name: "custom",
+                value: streamUrl,
+            };
 
-            entersState(data.player, AudioPlayerStatus.Playing, 5000);
+            let data = guildPlayers.get(guildid);
 
-            data.connection.subscribe(data.player);
-            data.nowPlaying = url.name;
+            if (data === undefined) {
+                data = await createAudioGuildData(channel);
 
-            // 0 user timeout
-            data.connection.on("stateChange", (oldState, newState) => {});
+                guildPlayers.set(guildid, data);
+            }
 
-            interaction.reply(user.toString() + ` Playing ___${url.name}___`);
+            playAudio(url, data)
+                .catch((reason) => {
+                    interaction.reply(user.toString() + " " + reason);
+                })
+                .then(() =>
+                    interaction.reply(
+                        user.toString() + ` Now playing ___${url.name}___!`
+                    )
+                );
         } catch (e) {
             console.error(e);
         }
@@ -266,6 +331,8 @@ registerCommand({
             // stop playing
             data.connection.destroy();
             data.player.stop();
+
+            guildPlayers.delete(guildId);
 
             interaction.reply(user.toString() + " Done!");
         }
@@ -377,20 +444,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     let guildId = oldState.guild.id;
-    
+
     let data = guildPlayers.get(guildId);
 
     // if nothing is playing, do nothing
-    if (!data) return;
+    if (data === undefined) return;
+
+    console.log(data.channelId);
 
     // if the bot is moved to a different channel, update the currentChannel
     if (newState.member && newState.member.id == clientId) {
         data.channelId = newState.channelId!;
     }
 
-
     // if something IS playing
-    const channel = await oldState.guild.channels.fetch(data.channelId, { cache: false })
+    const channel = await oldState.guild.channels.fetch(data.channelId, {
+        cache: false,
+    });
+
+    console.log(channel);
 
     if (channel == null) {
         console.log("failed to fetch channel " + data.channelId);
@@ -398,7 +470,8 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
         return;
     }
 
-    const channelSize = (channel.members as Collection<string, GuildMember>).size - 1;
+    const channelSize =
+        (channel.members as Collection<string, GuildMember>).size - 1;
 
     if (channelSize < 0) {
         console.log(`can't find channel ${data.channelId}`);
