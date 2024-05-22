@@ -1,4 +1,4 @@
-import { Client, Events, ChatInputCommandInteraction, Collection, GatewayIntentBits, VoiceChannel, REST, Routes, SlashCommandBuilder, CommandInteraction, SlashCommandStringOption, GuildMember } from "discord.js"
+import { Client, Events, ChatInputCommandInteraction, Collection, GatewayIntentBits, VoiceChannel, REST, Routes, SlashCommandBuilder, CommandInteraction, GuildMember } from "discord.js"
 import {
     joinVoiceChannel,
     createAudioPlayer,
@@ -29,7 +29,7 @@ interface Command {
 	data: any;
 }
 
-const commands: Collection<String, Command> = new Collection();
+const commands: Collection<string, Command> = new Collection();
 
 function registerCommand(command: Command)
 {
@@ -56,28 +56,49 @@ async function connectToChannel(channel: VoiceChannel): Promise<VoiceConnection>
 interface AudioGuildData {
 	player: AudioPlayer;
 	connection: VoiceConnection;
+	nowPlaying: string;
 }
 
-const guildPlayers: Map<String, AudioGuildData> = new Collection();
+const guildPlayers: Map<string, AudioGuildData> = new Collection();
+
+interface RadioURL {
+	name: string;
+	value: string;
+}
+
+const radioURLS: Array<RadioURL> = [
+	{ name: 'indie', value: 'http://streams.pinguinradio.com/PinguinRadio192.mp3'},
+	{ name: 'classics', value: 'http://streams.pinguinradio.com/PinguinClassics192.mp3'},
+	{ name: 'on the rocks', value: 'http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3'},
+	{ name: 'aardschok', value: 'https://streams.pinguinradio.com/Aardschok192.mp3'},
+	{ name: 'pop', value: 'https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409'},
+	{ name: 'grooves', value: 'https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412'},
+	{ name: 'pluche', value: 'https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384'},
+	{ name: 'world', value: 'https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387'},
+	{ name: 'fiesta', value: 'https://19293.live.streamtheworld.com/SP_R2292843_SC'},
+	{ name: 'showcases', value: 'https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl'},
+	{ name: 'vintage', value: 'https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl'},
+	{ name: 'blues', value: 'https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl'},
+];
 
 registerCommand({
 	data: new SlashCommandBuilder()
 		.setName('radio')
 		.setDescription('begin playing a radio station')
-		.addStringOption(option => 
+		.addIntegerOption(option => 
 			option.addChoices(
-				{ name: 'indie', value: 'http://streams.pinguinradio.com/PinguinRadio192.mp3'},
-				{ name: 'classics', value: 'http://streams.pinguinradio.com/PinguinClassics192.mp3'},
-				{ name: 'on the rocks', value: 'http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3'},
-				{ name: 'aardschok', value: 'https://streams.pinguinradio.com/Aardschok192.mp3'},
-				{ name: 'pop', value: 'https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409'},
-				{ name: 'grooves', value: 'https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412'},
-				{ name: 'pluche', value: 'https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384'},
-				{ name: 'world', value: 'https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387'},
-				{ name: 'fiesta', value: 'https://19293.live.streamtheworld.com/SP_R2292843_SC'},
-				{ name: 'showcases', value: 'https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl'},
-				{ name: 'vintage', value: 'https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl'},
-				{ name: 'blues', value: 'https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl'},
+				{ name: 'indie', value: 0},
+				{ name: 'classics', value: 1},
+				{ name: 'on the rocks', value: 2},
+				{ name: 'aardschok', value: 3},
+				{ name: 'pop', value: 4},
+				{ name: 'grooves', value: 5},
+				{ name: 'pluche', value: 6},
+				{ name: 'world', value: 7},
+				{ name: 'fiesta', value: 8},
+				{ name: 'showcases', value: 9},
+				{ name: 'vintage', value: 10},
+				{ name: 'blues', value: 11},
 			)
 			.setName('station')
 			.setRequired(true)
@@ -89,26 +110,48 @@ registerCommand({
 			const guildid = interaction.guildId!;
 			const member = interaction.member as GuildMember | null;
 
+			// dunno how this would fail, check for it nonetheless
 			if (!member) {
-				interaction.reply("something weird happened, idk");
+				interaction.reply("failed to fetch interaction member");
 				return;
 			}
 
+			// I hate typescript
 			const channel = member.voice.channel as VoiceChannel | null;
 
 			if (!channel) {
-				await interaction.reply("you are not in any voice channels...?");
+				await interaction.reply("you are not in any voice channels");
 
 				return;
 			}
 
-			let data: AudioGuildData = {
-				player: createAudioPlayer(),
-				connection: await connectToChannel(channel)
-			};
+			const url = radioURLS[interaction.options.getInteger('station', true)];
 
-			const url = interaction.options.getString('station', true);
-			const resource = createAudioResource(url, {
+			let data = guildPlayers.get(guildid);
+
+			if (data?.nowPlaying === url.name)
+			{
+				interaction.reply({
+					content: `Already playing ___${url.name}___`
+				});
+
+				return;
+			} else {
+				// new channel has been picked
+				interaction.reply(`Playing ___${url.name}___`);
+			}
+
+			if (!data) {
+				data = {
+					player: createAudioPlayer(),
+					connection: await connectToChannel(channel),
+					nowPlaying: url.name
+				};
+			} else {
+				data.nowPlaying = url.name;
+			}
+
+			const resource = createAudioResource(url.value, {
 				inputType: StreamType.Arbitrary
 			});
 
@@ -119,8 +162,6 @@ registerCommand({
 			data.connection.subscribe(data.player);
 
 			guildPlayers.set(guildid, data);
-
-			interaction.reply(`joined ${channel.name}!`);
 
 		} catch (e) {
 			console.error(e);
@@ -138,7 +179,7 @@ registerCommand({
 		const guildPlayer = guildPlayers.get(guildId);
 
 		if (guildPlayer === undefined) {
-			interaction.reply("not in a voice channel");
+			interaction.reply({content: "not in a voice channel", ephemeral: true});
 		} else {
 			guildPlayer.connection.destroy();
 			guildPlayer.player.stop();
@@ -148,12 +189,38 @@ registerCommand({
 	}
 });
 
+registerCommand({
+	data: new SlashCommandBuilder()
+		.setName('nowplaying')
+		.setDescription('list currently playing radio channel'),
+	async execute(interaction: ChatInputCommandInteraction) {
+		const guildid = interaction.guildId;
+
+		if (!guildid) {
+			interaction.reply('Not playing anything :/');
+			return;
+		}
+		
+		const data = guildPlayers.get(guildid!);
+
+		if (!data) {
+			interaction.reply('Not playing anything :/');
+			return;
+		}
+
+		interaction.reply(`Currently playing ___${data?.nowPlaying}___`);
+
+		
+	}
+});
+
 // and deploy your commands!
 (async () => {
-	const commandList: Array<String> = [];
+	const commandList: Array<string> = [];
 
 	commands.each(c => {
 		commandList.push(c.data.toJSON());
+		console.log(`deployed command '${c.data.name}'`);
 	})
 
 	const rest = new REST().setToken(token);
