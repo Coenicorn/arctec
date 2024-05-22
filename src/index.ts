@@ -173,7 +173,9 @@ registerCommand({
             const channel = member.voice.channel as VoiceChannel | null;
 
             if (!channel) {
-                await interaction.reply(user.toString() + " You are not in any voice channels");
+                await interaction.reply(
+                    user.toString() + " You are not in any voice channels"
+                );
 
                 return;
             }
@@ -197,7 +199,7 @@ registerCommand({
                 // user is in another channel, move
                 await data.connection.destroy();
                 data.connection = await connectToChannel(channel);
-				data.connection.subscribe(data.player);
+                data.connection.subscribe(data.player);
             }
 
             if (data.nowPlaying === url.name) {
@@ -238,7 +240,8 @@ registerCommand({
     async execute(interaction: ChatInputCommandInteraction) {
         const guildId = interaction.guildId!;
         const user = interaction.user;
-		const channel = (interaction.member as GuildMember | null)?.voice.channel;
+        const channel = (interaction.member as GuildMember | null)?.voice
+            .channel;
 
         const data = guildPlayers.get(guildId);
 
@@ -249,12 +252,14 @@ registerCommand({
                 ephemeral: true,
             });
         } else if (channel?.id !== data.channelId) {
-			// user is not in same voice channel as bot
-			interaction.reply({
-				content: user.toString() + " You are not in the same channel as the bot",
-				ephemeral: true
-			});
-		} else {
+            // user is not in same voice channel as bot
+            interaction.reply({
+                content:
+                    user.toString() +
+                    " You are not in the same channel as the bot",
+                ephemeral: true,
+            });
+        } else {
             // stop playing
             data.connection.destroy();
             data.player.stop();
