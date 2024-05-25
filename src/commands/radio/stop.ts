@@ -36,11 +36,12 @@ export default {
             return;
         }
 
+        replyMention(interaction, "Left the voice channel!");
+        
         // terminate connection
         data.connection.destroy();
 
         globalConnections.delete(guildid);
 
-        replyMention(interaction, "Left the voice channel!");
     }
 }

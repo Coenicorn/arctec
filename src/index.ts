@@ -77,7 +77,7 @@ dotenv.config();
                 data.callerChannel.send("I left the voice channel due to loneliness :(");
 
                 globalConnections.delete(guildid);
-            }, 1000);
+            }, 60000);
         }
     });
 })();
