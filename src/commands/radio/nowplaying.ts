@@ -26,14 +26,18 @@ export default {
             return;
         }
 
-        // check if user is in the same channel as the bot
+        // // check if user is in the same channel as the bot
         const data = globalConnections.get(guildid);
 
-        if (data === undefined) {
-            // nothing playing
-            replyMention(interaction, "Nothing is currently playing");
-        } else {
-            replyMention(interaction, `Currently playing ${data.player.source.name}!`);
-        }
+        // if (data === undefined) {
+        //     // nothing playing
+        //     replyMention(interaction, "Nothing is currently playing");
+        // } else {
+        //     replyMention(interaction, `Currently playing ${data.player.source.name}!`);
+        // }
+
+        console.log(data?.connection.joinConfig.channelId);
+
+        replyMention(interaction, "test", true);
     }
 }

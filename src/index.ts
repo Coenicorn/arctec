@@ -11,8 +11,14 @@ dotenv.config();
 
 (async ()=>{
 
-    const token: string = process.env.TOKEN!;
+    const token = process.env.TOKEN!;
     const clientId = process.env.CLIENTID!;
+
+    if (token === undefined || clientId === undefined) {
+        console.log("ERROR missing token or clientid");
+
+        return;
+    }
 
     await loadCommands().catch(e => console.error);
     await registerCommands(token, clientId, false, "1062342426934661130").catch(e => console.error(e));

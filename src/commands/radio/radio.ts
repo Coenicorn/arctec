@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, VoiceChannel, escapeHeading } from "discord.js";
 import { getAudioPlayerWithInfo, playAudio } from "../../player.js";
 import { Command } from "../../types.js";
-import { radioUrlsToString, replyMention } from "../../util.js";
+import { radioUrlsToString, replyEmbed } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -19,18 +19,18 @@ export default {
         const channel = member.voice.channel as VoiceChannel | null;
 
         if (channel === null) {
-            replyMention(interaction, "You are not in a voice channel", true);
+            replyEmbed(interaction, "You are not in a voice channel", true);
 
             return;
         }
 
         const urls = await getAudioPlayerWithInfo(streamName, null);
 
-        if (urls.length === 0) return replyMention(interaction, `Radio stream ___${streamName}___ not found`, true);
+        if (urls.length === 0) return replyEmbed(interaction, `Radio stream ___${streamName}___ not found`, true);
         else if (urls.length > 1) {
             let str = `Too many streams found matching ___'${streamName}'___:\n${radioUrlsToString(urls)}` 
 
-            replyMention(interaction, str, true);
+            replyEmbed(interaction, str, true);
 
             return;
         }
@@ -42,11 +42,11 @@ export default {
         try {
             playAudio(radiourl, channel).catch(e => console.error(e));
 
-            replyMention(interaction, `Playing ___${radiourl.name}___!`);
+            replyEmbed(interaction, `Playing ___${radiourl.name}___!`);
         } catch (e) {
             console.error(e);
 
-            replyMention(interaction, "An error uccurred trying to run this command", true);
+            replyEmbed(interaction, "An error uccurred trying to run this command", true);
         }
     }
 }

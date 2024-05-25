@@ -18,7 +18,8 @@
   },
   "scripts": {
     "comp": "tsc",
-    "deploy": "node bin/index.js",
+    "dev": "tsc -w",
+    "run": "node bin/index.js",
     "init-ts": "tsc --init"
   }
 }

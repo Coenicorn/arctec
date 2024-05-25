@@ -12,6 +12,14 @@ export function replyMention(
     });
 }
 
+export function replyEmbed(
+    interaction: ChatInputCommandInteraction,
+    message: string,
+    ephemeral = false
+) {
+    
+}
+
 export function radioUrlsToString(urls: Array<RadioURL>): string {
     let out = "";
     for (const url of urls) {
