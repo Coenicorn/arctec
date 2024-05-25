@@ -8,6 +8,7 @@ import {
     AudioPlayer,
     VoiceConnection,
     VoiceConnectionStatus,
+    NoSubscriberBehavior,
 } from "@discordjs/voice";
 import { VoiceChannel, Collection, TextChannel } from "discord.js";
 
@@ -91,7 +92,11 @@ export async function addAudioPlayerWithInfo(radioUrl: RadioURL): Promise<string
         console.log(str);
     }
 
-    const player = createAudioPlayer();
+    const player = createAudioPlayer({
+        behaviors: {
+            noSubscriber: NoSubscriberBehavior.Pause
+        }
+    });
     const resource = createAudioResource(radioUrl.url, {
         inputType: StreamType.Arbitrary,
     });

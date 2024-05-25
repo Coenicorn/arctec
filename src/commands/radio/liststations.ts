@@ -19,6 +19,8 @@ export default {
         ),
     async execute(interaction: ChatInputCommandInteraction) {
 
+        // await interaction.deferReply({ephemeral: true})
+
         const name = interaction.options.getString('name', false);
         const station = interaction.options.getString('station', false);
 

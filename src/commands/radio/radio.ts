@@ -7,7 +7,6 @@ import {
     escapeHeading,
 } from "discord.js";
 import { getAudioPlayerWithInfo, playAudio } from "../../player.js";
-import { Command } from "../../types.js";
 import {
     radioUrlToString,
     radioUrlsToString,
@@ -40,13 +39,12 @@ export default {
         const channel = member.voice.channel as VoiceChannel | null;
         const guild = interaction.guild;
 
+        // await interaction.deferReply();
+
         if (guild === null) return;
 
         if (channel === null) {
-            interaction.reply({
-                content: "You are not in a voice channel",
-                ephemeral: true,
-            });
+            replyEmbedSimple(interaction, "You are not in a voice channel");
 
             return;
         }
@@ -54,11 +52,11 @@ export default {
         const urls = await getAudioPlayerWithInfo(streamName, stationName);
 
         if (urls.length === 0)
-            interaction.reply({content: `Radio stream **${streamName}** not found`, ephemeral: true});
+            replyEmbedSimple(interaction, "No streams found matching `" + streamName + "`");
         else if (urls.length > 1) {
-            let str = `Too many streams found matching '**${streamName}**':\n${radioUrlsToString(
+            let str = "Too many streams found matching `" + streamName + "`:\n" + radioUrlsToString(
                 urls
-            )}`;
+            );
 
             replyEmbedSimple(interaction, str, true);
 

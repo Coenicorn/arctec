@@ -7,6 +7,6 @@ export default {
         .setName("stream")
         .setDescription("listen to a custom audio stream url"),
     async execute(interaction: ChatInputCommandInteraction) {
-        interaction.reply({content: "This command has not yet been implemented kek", ephemeral: true});
+        replyEmbedSimple(interaction, "This command has not yet been implemented kek");
     }
 }

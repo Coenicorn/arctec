@@ -23,10 +23,7 @@ export default {
         const data = globalConnections.get(guildid);
         
         if (data === undefined) {
-            interaction.reply({
-                content: "Not currently playing anything",
-                ephemeral: true
-            });
+            replyEmbedSimple(interaction, "Not currently playing anything");
             
             return;
         }
@@ -34,7 +31,7 @@ export default {
         // check if the user is in the same channel as the bot
         if (channelid !== data.connection.joinConfig.channelId) {
             // bot is not in the same channel, do nothing
-            interaction.reply({content: "You are not in the same channel as the bot :(", ephemeral: true});
+            replyEmbedSimple(interaction, "You are not in the same channel as the bot :(");
         
             return;
         }
