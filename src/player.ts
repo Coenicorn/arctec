@@ -54,13 +54,6 @@ export async function getAudioPlayerWithInfo(
     station: string | null
 ): Promise<Array<RadioURL>> {
     // check for a perfect match
-    let perfectMatch: AudioPlayerWithInfo | undefined;
-    if (
-        name !== null &&
-        (perfectMatch = globalPlayers.get(name)) !== undefined
-    ) {
-        return [perfectMatch.source];
-    }
 
     const out: Array<RadioURL> = [];
 
