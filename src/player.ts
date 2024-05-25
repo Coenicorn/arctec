@@ -220,6 +220,13 @@ export async function moveVoiceChannel(
     data.connection.subscribe(player.player);
 }
 
+/*
+
+
+TODO return error from this
+
+
+*/
 export async function playAudio(
     url: RadioURL,
     channel: VoiceChannel,
@@ -242,11 +249,7 @@ export async function playAudio(
     if (data === undefined) {
         // not currently in a voice channel, create connection
         data = {
-            connection: joinVoiceChannel({
-                channelId: channel.id,
-                guildId: channel.guildId,
-                adapterCreator: channel.guild.voiceAdapterCreator,
-            }),
+            connection: await connectToVoiceChannel(channel),
             player: currentPlayer,
             timer: null,
             callerChannel
