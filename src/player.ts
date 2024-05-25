@@ -9,7 +9,7 @@ import {
     VoiceConnection,
     VoiceConnectionStatus,
 } from "@discordjs/voice";
-import { VoiceChannel, Collection } from "discord.js";
+import { VoiceChannel, Collection, TextChannel } from "discord.js";
 
 export declare interface RadioURL {
     name: string;
@@ -29,11 +29,15 @@ export declare interface AudioConnectionData {
     player: AudioPlayerWithInfo;
     connection: VoiceConnection;
     timer: ReturnType<typeof setTimeout> | null;
+    callerChannel: TextChannel;
 }
 
-export const globalConnections: Map<string, AudioConnectionData> = new Collection();
+export const globalConnections: Map<string, AudioConnectionData> =
+    new Collection();
 
-export function getGuildAudioConnectionData(guildid: string): AudioConnectionData | undefined {
+export function getGuildAudioConnectionData(
+    guildid: string
+): AudioConnectionData | undefined {
     return globalConnections.get(guildid);
 }
 
@@ -46,19 +50,25 @@ export async function getAudioPlayerWithInfo(
     name: string | null,
     station: string | null
 ): Promise<Array<RadioURL>> {
-
     // check for a perfect match
     let perfectMatch: AudioPlayerWithInfo | undefined;
-    if (name !== null && (perfectMatch = globalPlayers.get(name)) !== undefined) {
+    if (
+        name !== null &&
+        (perfectMatch = globalPlayers.get(name)) !== undefined
+    ) {
         return [perfectMatch.source];
     }
 
     const out: Array<RadioURL> = [];
 
     // search for match
-    globalPlayers.each(playerInfo => {
+    globalPlayers.each((playerInfo) => {
         if (name !== null && playerInfo.source.name.match(name) == null) return;
-        if (station !== null && playerInfo.source.station.match(station) == null) return; 
+        if (
+            station !== null &&
+            playerInfo.source.station.match(station) == null
+        )
+            return;
 
         out.push(playerInfo.source);
     });
@@ -94,62 +104,62 @@ export function initPlayers() {
     addAudioPlayerWithInfo({
         name: "indie",
         url: "http://streams.pinguinradio.com/PinguinRadio192.mp3",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "classics",
         url: "http://streams.pinguinradio.com/PinguinClassics192.mp3",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "on the rocks",
         url: "http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "aardschok",
         url: "https://streams.pinguinradio.com/Aardschok192.mp3",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "pop",
         url: "https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "grooves",
         url: "https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "pluche",
         url: "https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "world",
         url: "https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "fiesta",
         url: "https://19293.live.streamtheworld.com/SP_R2292843_SC",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "showcases",
         url: "https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "vintage",
         url: "https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
     addAudioPlayerWithInfo({
         name: "blues",
         url: "https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl",
-        station: "pinguin_radio"
+        station: "pinguin_radio",
     });
 }
 
@@ -187,21 +197,10 @@ export async function moveVoiceChannel(
     data.connection.subscribe(player.player);
 }
 
-export async function createAudioConnectionData(channel: VoiceChannel, player: AudioPlayerWithInfo): Promise<AudioConnectionData> {
-    return {
-        connection: joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guildId,
-            adapterCreator: channel.guild.voiceAdapterCreator
-        }),
-        player: player,
-        timer: null
-    };
-}
-
 export async function playAudio(
     url: RadioURL,
-    channel: VoiceChannel
+    channel: VoiceChannel,
+    callerChannel: TextChannel
 ): Promise<Error | void> {
     // get the currently playing audio player, mapped by name
     const currentPlayer = globalPlayers.get(url.name);
@@ -219,7 +218,16 @@ export async function playAudio(
 
     if (data === undefined) {
         // not currently in a voice channel, create connection
-        data = await createAudioConnectionData(channel, currentPlayer);
+        data = {
+            connection: joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guildId,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+            }),
+            player: currentPlayer,
+            timer: null,
+            callerChannel
+        }
     } else if (channel.id !== data.connection.joinConfig.channelId) {
         // not in the same channel as the user, move
         moveVoiceChannel(channel, data);

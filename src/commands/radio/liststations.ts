@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { getAudioPlayerWithInfo } from "../../player.js";
 import { Command } from "../../types.js";
-import { radioUrlsToString, replyEmbed } from "../../util.js";
+import { radioUrlsToString, replyMention } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -26,6 +26,6 @@ export default {
 
         let str = "Stations found: \n" + radioUrlsToString(matches);
 
-        replyEmbed(interaction, str, true);
+        replyMention(interaction, str, true);
     }
 }

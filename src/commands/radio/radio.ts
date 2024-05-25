@@ -1,7 +1,7 @@
-import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, VoiceChannel, escapeHeading } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, TextChannel, VoiceChannel, escapeHeading } from "discord.js";
 import { getAudioPlayerWithInfo, playAudio } from "../../player.js";
 import { Command } from "../../types.js";
-import { radioUrlsToString, replyEmbed } from "../../util.js";
+import { radioUrlsToString, replyMention } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -17,20 +17,23 @@ export default {
         const streamName = interaction.options.getString("name", true);
         const member = interaction.member as GuildMember;
         const channel = member.voice.channel as VoiceChannel | null;
+        const guild = interaction.guild;
+
+        if (guild === null) return;
 
         if (channel === null) {
-            replyEmbed(interaction, "You are not in a voice channel", true);
+            replyMention(interaction, "You are not in a voice channel", true);
 
             return;
         }
 
         const urls = await getAudioPlayerWithInfo(streamName, null);
 
-        if (urls.length === 0) return replyEmbed(interaction, `Radio stream ___${streamName}___ not found`, true);
+        if (urls.length === 0) return replyMention(interaction, `Radio stream ___${streamName}___ not found`, true);
         else if (urls.length > 1) {
             let str = `Too many streams found matching ___'${streamName}'___:\n${radioUrlsToString(urls)}` 
 
-            replyEmbed(interaction, str, true);
+            replyMention(interaction, str, true);
 
             return;
         }
@@ -40,13 +43,13 @@ export default {
         const radiourl = urls[0];
 
         try {
-            playAudio(radiourl, channel).catch(e => console.error(e));
+            playAudio(radiourl, channel, (guild.channels.cache.get(interaction.channelId) as TextChannel)).catch(e => console.error(e));
 
-            replyEmbed(interaction, `Playing ___${radiourl.name}___!`);
+            replyMention(interaction, `Playing ___${radiourl.name}___!`);
         } catch (e) {
             console.error(e);
 
-            replyEmbed(interaction, "An error uccurred trying to run this command", true);
+            replyMention(interaction, "An error uccurred trying to run this command", true);
         }
     }
 }
