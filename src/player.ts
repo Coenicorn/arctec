@@ -11,6 +11,8 @@ import {
     NoSubscriberBehavior,
 } from "@discordjs/voice";
 import { VoiceChannel, Collection, TextChannel } from "discord.js";
+import { readFile, readFileSync, readdirSync } from "node:fs";
+import { RadioStreamJson } from "./types";
 
 export declare interface RadioURL {
     name: string;
@@ -64,10 +66,10 @@ export async function getAudioPlayerWithInfo(
 
     // search for match
     globalPlayers.each((playerInfo) => {
-        if (name !== null && playerInfo.source.name.match(name) == null) return;
+        if (name !== null && playerInfo.source.name.toLowerCase().match(name) == null) return;
         if (
             station !== null &&
-            playerInfo.source.station.match(station) == null
+            playerInfo.source.station.toLowerCase().match(station) == null
         )
             return;
 
@@ -82,14 +84,12 @@ export async function getAudioPlayerWithInfo(
  * @returns key in globalPlayers
  */
 export async function addAudioPlayerWithInfo(radioUrl: RadioURL): Promise<string> {
-    // necessary because some url's don't point directly to a stream, but rather redirect the client to it (assuming said client is using a browser) -_-
-    if (radioUrl.url.startsWith("https://samcloud.")) {
-        let str = "correction: " + radioUrl.url + " -> ";
-        radioUrl.url = await new Promise((resolve, reject) => fetch(radioUrl.url).then(val => {
-            resolve(val.url);
-        }));
-        str += radioUrl.url;
-        console.log(str);
+    // workaround for redirects
+    const response = await fetch(radioUrl.url);
+
+    if (response.url !== radioUrl.url) {
+        console.log(`correction: ${radioUrl.url} -> ${response.url}`);
+        radioUrl.url = response.url;
     }
 
     const player = createAudioPlayer({
@@ -116,66 +116,81 @@ export async function addAudioPlayerWithInfo(radioUrl: RadioURL): Promise<string
 }
 
 export async function initPlayers() {
-    await addAudioPlayerWithInfo({
-        name: "indie",
-        url: "http://streams.pinguinradio.com/PinguinRadio192.mp3",
-        station: "pinguin_radio",
+    // await addAudioPlayerWithInfo({
+    //     name: "indie",
+    //     url: "http://streams.pinguinradio.com/PinguinRadio192.mp3",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "classics",
+    //     url: "http://streams.pinguinradio.com/PinguinClassics192.mp3",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "on the rocks",
+    //     url: "http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "aardschok",
+    //     url: "https://streams.pinguinradio.com/Aardschok192.mp3",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "pop",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "grooves",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "pluche",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "world",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "fiesta",
+    //     url: "https://19293.live.streamtheworld.com/SP_R2292843_SC",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "showcases",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "vintage",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl",
+    //     station: "pinguin_radio",
+    // });
+    // await addAudioPlayerWithInfo({
+    //     name: "blues",
+    //     url: "https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl",
+    //     station: "pinguin_radio",
+    // });
+ 
+    const filename = process.env.STREAMFILE;
+
+    if (filename === undefined) throw new Error("no environment variable for STREAMFILE");
+
+    const content = readFileSync(filename, {
+        encoding: "utf8"
     });
-    await addAudioPlayerWithInfo({
-        name: "classics",
-        url: "http://streams.pinguinradio.com/PinguinClassics192.mp3",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "on the rocks",
-        url: "http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "aardschok",
-        url: "https://streams.pinguinradio.com/Aardschok192.mp3",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "pop",
-        url: "https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "grooves",
-        url: "https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "pluche",
-        url: "https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "world",
-        url: "https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "fiesta",
-        url: "https://19293.live.streamtheworld.com/SP_R2292843_SC",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "showcases",
-        url: "https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "vintage",
-        url: "https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl",
-        station: "pinguin_radio",
-    });
-    await addAudioPlayerWithInfo({
-        name: "blues",
-        url: "https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl",
-        station: "pinguin_radio",
-    });
+
+    const urls: RadioStreamJson = JSON.parse(content);
+
+    for (const url of urls.streams) {
+        await addAudioPlayerWithInfo(url);
+    }
+
 }
 
 // connects to a discord voice channel
@@ -216,12 +231,12 @@ export async function playAudio(
     url: RadioURL,
     channel: VoiceChannel,
     callerChannel: TextChannel
-): Promise<Error | void> {
+) {
     // get the currently playing audio player, mapped by name
     const currentPlayer = globalPlayers.get(url.name);
 
     if (currentPlayer === undefined) {
-        return new Error(` Couldn't find a station called **${url.name}**`);
+        return;
     }
 
     const guildid = channel.guildId;
@@ -247,9 +262,7 @@ export async function playAudio(
         // not in the same channel as the user, move
         moveVoiceChannel(channel, data);
     } else if (data.player.source.name === url.name) {
-        return new Error(
-            ` Already playing **${currentPlayer.source.name}**`
-        );
+        return
     }
 
     data.connection.subscribe(currentPlayer.player);

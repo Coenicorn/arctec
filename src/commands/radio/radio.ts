@@ -52,7 +52,11 @@ export default {
         const urls = await getAudioPlayerWithInfo(streamName, stationName);
 
         if (urls.length === 0)
+        {
             replyEmbedSimple(interaction, "No streams found matching `" + streamName + "`");
+
+            return;
+        }
         else if (urls.length > 1) {
             let str = "Too many streams found matching `" + streamName + "`:\n" + radioUrlsToString(
                 urls

@@ -6,14 +6,10 @@ import { globalConnections, initPlayers } from "./player.js";
 dotenv.config();
 
 (async () => {
-    const token = process.env.TOKEN!;
-    const clientId = process.env.CLIENTID!;
+    const token = process.env.TOKEN;
+    const clientId = process.env.CLIENTID;
 
-    if (token === undefined || clientId === undefined) {
-        console.log("ERROR missing token or clientid");
-
-        return;
-    }
+    if (token === undefined || clientId === undefined) throw new Error("missing token or clientid");
 
     await loadCommands().catch((e) => console.error);
     await registerCommands(token, clientId, false, "1062342426934661130").catch(

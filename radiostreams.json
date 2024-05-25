@@ -1,0 +1,119 @@
+{
+    "streams": [
+        {
+            "name": "indie",
+            "url": "http://streams.pinguinradio.com/PinguinRadio192.mp3",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "classics",
+            "url": "http://streams.pinguinradio.com/PinguinClassics192.mp3",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "on the rocks",
+            "url": "http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "aardschok",
+            "url": "https://streams.pinguinradio.com/Aardschok192.mp3",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "pop",  
+            "url": "https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "grooves",
+            "url": "https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "pluche",
+            "url": "https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "world",
+            "url": "https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "fiesta",
+            "url": "https://19293.live.streamtheworld.com/SP_R2292843_SC",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "showcases",
+            "url": "https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "vintage",
+            "url": "https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "blues",
+            "url": "https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl",
+            "station": "Pinguin Radio"
+        },
+        {
+            "name": "100%NL",
+            "url": "https://stream.100p.nl/100pctnl.mp3",
+            "station": "100%NL"
+        },
+        {
+            "name": "Radio 538",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO538.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Classics",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR08.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Dance Dept.",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR01.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Hitzone",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR11.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Ibiza",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR19.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Nonstop",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR09.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Party",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR16.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Top 50",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR13.mp3",
+            "station": "538"
+        },
+        {
+            "name": "Die Verrückte",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR21.mp3",
+            "station": ""
+        },
+        {
+            "name": "Zomer",
+            "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR06.mp3",
+            "station": "538"
+        }
+    ]
+}
