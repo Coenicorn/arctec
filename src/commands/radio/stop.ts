@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder } from "discord.js";
 import { getGuildAudioConnectionData, globalConnections } from "../../player.js";
-import { replyMention } from "../../util.js";
+import { replyEmbedSimple, replyError } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -14,7 +14,7 @@ export default {
         const guildid = interaction.guildId;
         
         if (guildid === null) {
-            replyMention(interaction, "An error occurred trying to run this command");
+            replyError(interaction);
             console.log("failed to find guildid");
             
             return;
@@ -23,7 +23,10 @@ export default {
         const data = globalConnections.get(guildid);
         
         if (data === undefined) {
-            replyMention(interaction, "Not currently playing anything", true);
+            interaction.reply({
+                content: "Not currently playing anything",
+                ephemeral: true
+            });
             
             return;
         }
@@ -31,12 +34,12 @@ export default {
         // check if the user is in the same channel as the bot
         if (channelid !== data.connection.joinConfig.channelId) {
             // bot is not in the same channel, do nothing
-            replyMention(interaction, "You are not in the same channel as the bot :(");
+            interaction.reply({content: "You are not in the same channel as the bot :(", ephemeral: true});
         
             return;
         }
 
-        replyMention(interaction, "Left the voice channel!");
+        replyEmbedSimple(interaction, "Left the voice channel!");
         
         // terminate connection
         data.connection.destroy();

@@ -1,20 +1,41 @@
-import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, TextChannel, VoiceChannel, escapeHeading } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    GuildMember,
+    SlashCommandBuilder,
+    TextChannel,
+    VoiceChannel,
+    escapeHeading,
+} from "discord.js";
 import { getAudioPlayerWithInfo, playAudio } from "../../player.js";
 import { Command } from "../../types.js";
-import { radioUrlsToString, replyMention } from "../../util.js";
+import {
+    radioUrlToString,
+    radioUrlsToString,
+    replyEmbedSimple,
+    replyError,
+} from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
         .setName("radio")
-        .setDescription("plays the selected radio stream in the current voice channel.")
-        .addStringOption(input => 
-            input.
-                setName("name")
-                .setDescription("selected radio stream name")
+        .setDescription(
+            "plays the selected radio stream in the current voice channel."
+        )
+        .addStringOption((input) =>
+            input
+                .setName("name")
+                .setDescription("name of the source name")
                 .setRequired(true)
+        )
+        .addStringOption((input) => 
+            input
+                .setName("station")
+                .setDescription("name of the source radio station")
+                .setRequired(false)
         ),
     async execute(interaction: ChatInputCommandInteraction) {
         const streamName = interaction.options.getString("name", true);
+        const stationName = interaction.options.getString("station", false);
         const member = interaction.member as GuildMember;
         const channel = member.voice.channel as VoiceChannel | null;
         const guild = interaction.guild;
@@ -22,18 +43,24 @@ export default {
         if (guild === null) return;
 
         if (channel === null) {
-            replyMention(interaction, "You are not in a voice channel", true);
+            interaction.reply({
+                content: "You are not in a voice channel",
+                ephemeral: true,
+            });
 
             return;
         }
 
-        const urls = await getAudioPlayerWithInfo(streamName, null);
+        const urls = await getAudioPlayerWithInfo(streamName, stationName);
 
-        if (urls.length === 0) return replyMention(interaction, `Radio stream ___${streamName}___ not found`, true);
+        if (urls.length === 0)
+            interaction.reply({content: `Radio stream **${streamName}** not found`, ephemeral: true});
         else if (urls.length > 1) {
-            let str = `Too many streams found matching ___'${streamName}'___:\n${radioUrlsToString(urls)}` 
+            let str = `Too many streams found matching '**${streamName}**':\n${radioUrlsToString(
+                urls
+            )}`;
 
-            replyMention(interaction, str, true);
+            replyEmbedSimple(interaction, str, true);
 
             return;
         }
@@ -43,13 +70,17 @@ export default {
         const radiourl = urls[0];
 
         try {
-            playAudio(radiourl, channel, (guild.channels.cache.get(interaction.channelId) as TextChannel)).catch(e => console.error(e));
+            playAudio(
+                radiourl,
+                channel,
+                guild.channels.cache.get(interaction.channelId) as TextChannel
+            );
 
-            replyMention(interaction, `Playing ___${radiourl.name}___!`);
+            replyEmbedSimple(interaction, `Playing ${radioUrlToString(radiourl)}!`);
         } catch (e) {
             console.error(e);
 
-            replyMention(interaction, "An error uccurred trying to run this command", true);
+            replyError(interaction);
         }
-    }
-}
+    },
+};

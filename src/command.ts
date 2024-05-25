@@ -8,7 +8,7 @@ import {
     Routes,
 } from "discord.js";
 import { Command } from "./types.js";
-import { replyEmbed } from "./util.js";
+import { replyError } from "./util.js";
 
 const globalCommands: Collection<string, Command> = new Collection();
 
@@ -87,7 +87,7 @@ export async function handleCommand(interaction: ChatInputCommandInteraction) {
     const user = interaction.user;
 
     if (command === undefined) {
-        replyEmbed(interaction, `Couldn't find any command called ${interaction.commandName}`, true);
+        interaction.reply({ content: `Couldn't find any command called ${interaction.commandName}`, ephemeral: true});
 
         return;
     }
@@ -97,6 +97,6 @@ export async function handleCommand(interaction: ChatInputCommandInteraction) {
     } catch (e) {
         console.error(e);
         
-        replyEmbed(interaction, `Something went wrong trying to run this command`, true)
+        replyError(interaction);
     }
 }

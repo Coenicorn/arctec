@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { getAudioPlayerWithInfo } from "../../player.js";
 import { Command } from "../../types.js";
-import { radioUrlsToString, replyMention } from "../../util.js";
+import { radioUrlsToString, replyEmbedSimple } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -10,12 +10,12 @@ export default {
         .addStringOption(input => 
             input.
                 setName("name")
-                .setDescription("name of the radio stream")
+                .setDescription("name of the source name")
         )
         .addStringOption(input => 
             input.
                 setName("station")
-                .setDescription("name of the station that is providing the stream")
+                .setDescription("name of the source radio station")
         ),
     async execute(interaction: ChatInputCommandInteraction) {
 
@@ -26,6 +26,6 @@ export default {
 
         let str = "Stations found: \n" + radioUrlsToString(matches);
 
-        replyMention(interaction, str, true);
+        replyEmbedSimple(interaction, str, true);
     }
 }

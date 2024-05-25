@@ -20,7 +20,7 @@ dotenv.config();
         (e) => console.error(e)
     );
 
-    initPlayers();
+    await initPlayers();
 
     const client = new Client({
         intents: [
@@ -33,9 +33,7 @@ dotenv.config();
     client.login(token);
 
     client.on("ready", async () => {
-        console.log(
-            `\n****************\nClient ready\nTOKEN=${token}\nCLIENTID=${clientId}\n****************\n`
-        );
+        console.log("client ready");
     });
 
     // also blatantly stolen from discord (but it's unlicensed so who cares >_>) (I really really REALLY hope it's actually unlicensed)

@@ -80,7 +80,17 @@ export async function getAudioPlayerWithInfo(
  * Adds new AudioPlayerWithInfo to global array
  * @returns key in globalPlayers
  */
-export function addAudioPlayerWithInfo(radioUrl: RadioURL): string {
+export async function addAudioPlayerWithInfo(radioUrl: RadioURL): Promise<string> {
+    // necessary because some url's don't point directly to a stream, but rather redirect the client to it (assuming said client is using a browser) -_-
+    if (radioUrl.url.startsWith("https://samcloud.")) {
+        let str = "correction: " + radioUrl.url + " -> ";
+        radioUrl.url = await new Promise((resolve, reject) => fetch(radioUrl.url).then(val => {
+            resolve(val.url);
+        }));
+        str += radioUrl.url;
+        console.log(str);
+    }
+
     const player = createAudioPlayer();
     const resource = createAudioResource(radioUrl.url, {
         inputType: StreamType.Arbitrary,
@@ -100,63 +110,63 @@ export function addAudioPlayerWithInfo(radioUrl: RadioURL): string {
     return radioUrl.name;
 }
 
-export function initPlayers() {
-    addAudioPlayerWithInfo({
+export async function initPlayers() {
+    await addAudioPlayerWithInfo({
         name: "indie",
         url: "http://streams.pinguinradio.com/PinguinRadio192.mp3",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "classics",
         url: "http://streams.pinguinradio.com/PinguinClassics192.mp3",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "on the rocks",
         url: "http://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "aardschok",
         url: "https://streams.pinguinradio.com/Aardschok192.mp3",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "pop",
         url: "https://samcloud.spacial.com/api/listen?sid=98586&m=sc&rid=174409",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "grooves",
         url: "https://samcloud.spacial.com/api/listen?sid=98587&m=sc&rid=174412",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "pluche",
         url: "https://samcloud.spacial.com/api/listen?sid=98569&m=sc&rid=174384",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "world",
         url: "https://samcloud.spacial.com/api/listen?sid=98570&m=sc&rid=174387",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "fiesta",
         url: "https://19293.live.streamtheworld.com/SP_R2292843_SC",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "showcases",
         url: "https://samcloud.spacial.com/api/listen?sid=110690&m=sc&rid=190799&t=ssl",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "vintage",
         url: "https://samcloud.spacial.com/api/listen?sid=131111&m=sc&rid=275910&t=ssl",
         station: "pinguin_radio",
     });
-    addAudioPlayerWithInfo({
+    await addAudioPlayerWithInfo({
         name: "blues",
         url: "https://samcloud.spacial.com/api/listen?sid=93462&m=sc&rid=168006&t=ssl",
         station: "pinguin_radio",
@@ -206,7 +216,7 @@ export async function playAudio(
     const currentPlayer = globalPlayers.get(url.name);
 
     if (currentPlayer === undefined) {
-        return new Error(` Couldn't find a station called ___${url.name}___`);
+        return new Error(` Couldn't find a station called **${url.name}**`);
     }
 
     const guildid = channel.guildId;
@@ -233,7 +243,7 @@ export async function playAudio(
         moveVoiceChannel(channel, data);
     } else if (data.player.source.name === url.name) {
         return new Error(
-            ` Already playing ___${currentPlayer.source.name}___!`
+            ` Already playing **${currentPlayer.source.name}**!`
         );
     }
 

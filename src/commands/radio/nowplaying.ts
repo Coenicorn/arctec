@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder, VoiceChannel } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, GuildMember, SlashCommandBuilder, VoiceChannel } from "discord.js";
 import { globalConnections } from "../../player.js";
-import { replyMention } from "../../util.js";
+import { replyEmbedSimple, replyError } from "../../util.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -9,19 +9,19 @@ export default {
     async execute(interaction: ChatInputCommandInteraction) {
         const member = interaction.member as GuildMember | null;
         if (member === null) {
-            replyMention(interaction, "Something went wrong trying to run this command", true);
+            replyError(interaction);
 
             return;
         }
         const channel = member.voice.channel as VoiceChannel | null;
         if (channel === null) {
-            replyMention(interaction, "Something went wrong trying to run this command", true);
+            replyError(interaction);
 
             return;
         }
         const guildid = interaction.guildId;
         if (guildid === null) {
-            replyMention(interaction, "Something went wrong trying to run this command", true);
+            replyError(interaction);
 
             return;
         }
@@ -31,11 +31,9 @@ export default {
 
         if (data === undefined) {
             // nothing playing
-            replyMention(interaction, "Nothing is currently playing");
+            replyEmbedSimple(interaction, "Nothing is currently playing");
         } else {
-            replyMention(interaction, `Currently playing ${data.player.source.name}!`);
+            replyEmbedSimple(interaction, `Currently playing ${data.player.source.name}!`);
         }
-
-        replyMention(interaction, "test", true);
     }
 }
