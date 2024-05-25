@@ -76,7 +76,7 @@ export default {
                 guild.channels.cache.get(interaction.channelId) as TextChannel
             );
 
-            replyEmbedSimple(interaction, `Playing ${radioUrlToString(radiourl)}!`);
+            replyEmbedSimple(interaction, `Playing ${radioUrlToString(radiourl)}`);
         } catch (e) {
             console.error(e);
 

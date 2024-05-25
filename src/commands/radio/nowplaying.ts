@@ -33,7 +33,7 @@ export default {
             // nothing playing
             replyEmbedSimple(interaction, "Nothing is currently playing");
         } else {
-            replyEmbedSimple(interaction, `Currently playing ${data.player.source.name}!`);
+            replyEmbedSimple(interaction, `Currently playing ${data.player.source.name}`);
         }
     }
 }

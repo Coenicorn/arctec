@@ -243,7 +243,7 @@ export async function playAudio(
         moveVoiceChannel(channel, data);
     } else if (data.player.source.name === url.name) {
         return new Error(
-            ` Already playing **${currentPlayer.source.name}**!`
+            ` Already playing **${currentPlayer.source.name}**`
         );
     }
 

@@ -39,7 +39,7 @@ export default {
             return;
         }
 
-        replyEmbedSimple(interaction, "Left the voice channel!");
+        replyEmbedSimple(interaction, "Left the voice channel");
         
         // terminate connection
         data.connection.destroy();
