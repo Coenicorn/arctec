@@ -2,13 +2,15 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import {
     ChatInputCommandInteraction,
+    Client,
     Collection,
     REST,
     RESTPostAPIApplicationCommandsJSONBody,
     Routes,
 } from "discord.js";
-import { Command } from "./types.js";
-import { replyEmbedSimple, replyError } from "./util.js";
+import { BaseCommand } from "base/baseCommand.js";
+import { BotClient } from "botclient.js";
+import { Logger } from "util.js";
 
 const globalCommands: Collection<string, Command> = new Collection();
 
@@ -31,7 +33,7 @@ export async function loadCommands(): Promise<Error | void> {
 
             const command = (await import(filePath)).default.default;
 
-            console.log(`loaded command ${command.data.name}`);
+            Logger.info(`loaded command ${command.data.name}`);
 
             globalCommands.set(command.data.name, command);
         }
@@ -82,21 +84,43 @@ export async function registerCommands(
     }
 }
 
-export async function handleCommand(interaction: ChatInputCommandInteraction) {
-    const command = globalCommands.get(interaction.commandName);
-    const user = interaction.user;
+export class CommandManager {
+    readonly commands: Collection<string, BaseCommand> = new Collection();
 
-    if (command === undefined) {
-        replyEmbedSimple(interaction, `Couldn't find any command called ${interaction.commandName}`, true);
+    async loadCommands(commandsSubDirectory: string): Promise<void | Error> {
 
-        return;
+        const foldersPath = path.join(process.cwd(), commandsSubDirectory);
+        const commandFolders = fs.readdirSync(foldersPath);
+
+        for (const folder of commandFolders) {
+            const commandsPath = path.join(foldersPath, folder);
+            const commandFileNames = fs.readdirSync(commandsPath);
+
+            for (const commandFile of commandFileNames) {
+
+                const filePath = path.join(commandsPath, commandFile);
+
+                const command: BaseCommand = (await import(filePath)).default.default;
+
+                Logger.info(`loaded command ${command.name}`);
+
+                this.commands.set(command.name, command);
+
+            }
+        }
     }
 
-    try {
-        command.execute(interaction);
-    } catch (e) {
-        console.error(e);
-        
-        replyError(interaction);
+    async registerCommands() {
+        if (this.commands.size === 0) {}
+    }
+
+    async handleCommand(client: BotClient, interaction: ChatInputCommandInteraction): Promise<void | Error> {
+
+        const command = this.commands.get(interaction.commandName);
+
+        if (command === undefined) return new Error(`No command found named '${interaction.commandName}'`);
+
+        return command.execute(client, interaction);
+
     }
 }

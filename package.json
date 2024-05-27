@@ -1,7 +1,7 @@
 {
   "name": "entarctic",
   "module": "index.ts",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@types/jsmediatags": "^3.9.6",
     "@types/node": "^20.12.12"

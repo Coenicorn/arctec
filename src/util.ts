@@ -1,46 +1,4 @@
-import {
-    ChatInputCommandInteraction,
-    EmbedBuilder,
-    VoiceChannel,
-} from "discord.js";
-import { RadioURL } from "./player";
-
-export const globalBotEmbedColor = "#336233";
-
-/* ephemeral option DOES NOT WORK when the interaction is deferred */
-export function replyEmbedSimple(
-    interaction: ChatInputCommandInteraction,
-    message: string,
-    ephemeral = false
-) {
-    if (interaction.deferred) {
-        interaction.editReply({
-            embeds: [
-                new EmbedBuilder().setColor("#336233").setDescription(message),
-            ],
-        });
-    } else {
-        interaction.reply({
-            embeds: [
-                new EmbedBuilder().setColor("#336233").setDescription(message),
-            ],
-            ephemeral,
-        });
-    }
-}
-
-export function replyError(interaction: ChatInputCommandInteraction) {
-    if (interaction.deferred) {
-        interaction.editReply({
-            content: `Something went wrong trying to run this command :(`,
-        });
-    } else {
-        interaction.reply({
-            content: `Something went wrong trying to run this command :(`,
-            ephemeral: true,
-        });
-    }
-}
+import { RadioURL } from "types.js";
 
 export function radioUrlToString(url: RadioURL): string {
     return "`" + url.name + "` by `" + url.station + "`";
@@ -52,4 +10,22 @@ export function radioUrlsToString(urls: Array<RadioURL>): string {
         out += "\n- " + radioUrlToString(urls[i]);
     }
     return out;
+}
+
+export namespace Time {
+    export function getTimeFormatted(): string {
+        const date = new Date();
+    
+        return `[${date.toTimeString()}]`;
+    }
+}
+
+export namespace Logger {
+    export function error(message: string): void {
+        console.log(Time.getTimeFormatted() + " [ERROR] " + message);
+    }
+
+    export function info(message: string): void {
+        console.log(Time.getTimeFormatted() + " [INFO] " + message);
+    }
 }

@@ -1,35 +1,33 @@
 import { Client, Events, GatewayIntentBits, VoiceChannel } from "discord.js";
 import * as dotenv from "dotenv";
-import { handleCommand, loadCommands, registerCommands } from "./command.js";
+import { handleCommand, loadCommands, registerCommands } from "./helpers/commandManager.js";
 import { globalConnections, initPlayers } from "./player.js";
+import { BotClient } from "botclient.js";
+import { Logger } from "util.js";
 
 dotenv.config();
 
 (async () => {
     const token = process.env.TOKEN;
-    const clientId = process.env.CLIENTID;
+    const clientid = process.env.CLIENTID;
 
-    if (token === undefined || clientId === undefined) throw new Error("missing token or clientid");
+    if (token === undefined || clientid === undefined) throw new Error("missing token or clientid");
 
-    await loadCommands().catch((e) => console.error);
-    await registerCommands(token, clientId, false, "1062342426934661130").catch(
-        (e) => console.error(e)
-    );
-
-    await initPlayers();
-
-    const client = new Client({
+    const client = new BotClient({
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildVoiceStates,
             GatewayIntentBits.GuildMessages,
         ],
+        token,
+        clientid
     });
+
+    client.commandManager.load("commands");
 
     client.login(token);
 
     client.on("ready", async () => {
-        console.log("client ready");
     });
 
     // also blatantly stolen from discord (but it's unlicensed so who cares >_>) (I really really REALLY hope it's actually unlicensed)
@@ -37,41 +35,5 @@ dotenv.config();
         if (!interaction.isChatInputCommand()) return;
 
         handleCommand(interaction);
-    });
-
-    client.on(Events.VoiceStateUpdate, (oldState, newState) => {
-        // check if the bot is in any voice channels
-        const guildid = newState.guild.id;
-        const data = globalConnections.get(guildid);
-
-        // no current connections
-        if (data === undefined || data.connection.state.status === "destroyed") return;
-
-        if (
-            newState.channelId === data.connection.joinConfig.channelId &&
-            data.timer !== null
-        ) {
-            // someone has joined the voice channel the bot is in
-            // reset leave timer
-            clearTimeout(data.timer);
-
-            return;
-        }
-        
-        // check amount of users in voice channel bot is in
-        const channel = client.channels.cache.get(data.connection.joinConfig.channelId! /* connection isn't destroyed so this always exists */);
-
-        if (channel === undefined || !channel.isVoiceBased()) return;
-
-        if (channel.members.size === 1) {
-            // if only the bot is in the voice channel, set a leave timeout
-            data.timer = setTimeout(() => {
-                data.connection.destroy();
-
-                data.callerChannel.send("I left the voice channel due to loneliness :(");
-
-                globalConnections.delete(guildid);
-            }, 60000);
-        }
     });
 })();
