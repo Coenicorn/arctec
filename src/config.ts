@@ -1,3 +1,3 @@
 export namespace Config {
-    export const globalBotEmbedColor = "#336233";
+    export const globalBotEmbedColor: string = "#336233";
 }

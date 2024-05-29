@@ -12,77 +12,77 @@ import { BaseCommand } from "base/baseCommand.js";
 import { BotClient } from "botclient.js";
 import { Logger } from "util.js";
 
-const globalCommands: Collection<string, Command> = new Collection();
+// const globalCommands: Collection<string, Command> = new Collection();
 
-export async function loadCommands(): Promise<Error | void> {
-    // load commands programatically
-    const foldersPath = path.join(__dirname, "commands");
-    const commandFiles = fs.readdirSync(foldersPath);
+// export async function loadCommands(): Promise<Error | void> {
+//     // load commands programatically
+//     const foldersPath = path.join(__dirname, "commands");
+//     const commandFiles = fs.readdirSync(foldersPath);
 
-    // allow subfolder
-    for (const folderName of commandFiles) {
-        // get individual command file names
-        const commandsPath = path.join(foldersPath, folderName);
-        const commandNames = fs.readdirSync(commandsPath);
+//     // allow subfolder
+//     for (const folderName of commandFiles) {
+//         // get individual command file names
+//         const commandsPath = path.join(foldersPath, folderName);
+//         const commandNames = fs.readdirSync(commandsPath);
 
-        // console.log(commandNames);
+//         // console.log(commandNames);
 
-        for (const fileName of commandNames) {
-            // load command into variable
-            const filePath = path.join(commandsPath, fileName);
+//         for (const fileName of commandNames) {
+//             // load command into variable
+//             const filePath = path.join(commandsPath, fileName);
 
-            const command = (await import(filePath)).default.default;
+//             const command = (await import(filePath)).default.default;
 
-            Logger.info(`loaded command ${command.data.name}`);
+//             Logger.info(`loaded command ${command.data.name}`);
 
-            globalCommands.set(command.data.name, command);
-        }
-    }
-}
+//             globalCommands.set(command.data.name, command);
+//         }
+//     }
+// }
 
-// this code is copied from the discordjs docs lol
-// if it aint broke don't fix it
-export async function registerCommands(
-    token: string,
-    clientId: string,
-    isGlobal: boolean,
-    guildId?: string
-): Promise<void | Error> {
-    if (globalCommands.size === 0) {
-        return new Error(
-            "refusing to load 0 commands, have you called loadCommands()?"
-        );
-    }
+// // this code is copied from the discordjs docs lol
+// // if it aint broke don't fix it
+// export async function registerCommands(
+//     token: string,
+//     clientId: string,
+//     isGlobal: boolean,
+//     guildId?: string
+// ): Promise<void | Error> {
+//     if (globalCommands.size === 0) {
+//         return new Error(
+//             "refusing to load 0 commands, have you called loadCommands()?"
+//         );
+//     }
 
-    const commands: Array<RESTPostAPIApplicationCommandsJSONBody> = [];
+//     const commands: Array<RESTPostAPIApplicationCommandsJSONBody> = [];
 
-    globalCommands.each(command => {
-        commands.push(command.data.toJSON());
-    });
+//     globalCommands.each(command => {
+//         commands.push(command.data.toJSON());
+//     });
 
-    // push commands to discord REST
+//     // push commands to discord REST
 
-    const rest = new REST().setToken(token);
+//     const rest = new REST().setToken(token);
 
-    try {
-        // console.log(`registering ${commands.length} commands...`);
+//     try {
+//         // console.log(`registering ${commands.length} commands...`);
 
-        let route;
+//         let route;
 
-        if (!isGlobal) {
-            if (guildId === undefined)
-                return new Error("no guild id was specified");
+//         if (!isGlobal) {
+//             if (guildId === undefined)
+//                 return new Error("no guild id was specified");
 
-            route = Routes.applicationGuildCommands(clientId, guildId);
-        } else {
-            route = Routes.applicationCommands(clientId);
-        }
+//             route = Routes.applicationGuildCommands(clientId, guildId);
+//         } else {
+//             route = Routes.applicationCommands(clientId);
+//         }
 
-        const data = await rest.put(route, { body: commands });
-    } catch (e) {
-        console.error(e);
-    }
-}
+//         const data = await rest.put(route, { body: commands });
+//     } catch (e) {
+//         Logger.error(e);
+//     }
+// }
 
 export class CommandManager {
     readonly commands: Collection<string, BaseCommand> = new Collection();
@@ -110,8 +110,28 @@ export class CommandManager {
         }
     }
 
-    async registerCommands() {
-        if (this.commands.size === 0) {}
+    async registerCommands(client: BotClient, global = false, guildid = ""): Promise<Error | void> {
+        if (this.commands.size === 0) return new Error("no commands loaded to be registered");
+
+        const commands: Array<RESTPostAPIApplicationCommandsJSONBody> = [];
+
+        this.commands.each((cmd) => {
+            commands.push(cmd.toJSON());
+        });
+
+        try {
+            let route;
+
+            if (global) route = Routes.applicationCommands(client.clientid);
+            else if (guildid === "") /*missing guildid*/ return new Error("Guild id not specified");
+            else route = Routes.applicationGuildCommands(client.clientid, guildid);
+
+            const rest = new REST().setToken(client.token);
+
+            const data = await rest.put(route, { body: commands });
+        } catch (e) {
+            return new Error("something went wrong registering the commands");
+        }
     }
 
     async handleCommand(client: BotClient, interaction: ChatInputCommandInteraction): Promise<void | Error> {

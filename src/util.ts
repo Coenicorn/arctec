@@ -1,15 +1,21 @@
+import { EmbedBuilder } from "@discordjs/builders";
 import { RadioURL } from "types.js";
+import { Config } from "config.js";
 
-export function radioUrlToString(url: RadioURL): string {
-    return "`" + url.name + "` by `" + url.station + "`";
-}
+export namespace RadioFormat {
 
-export function radioUrlsToString(urls: Array<RadioURL>): string {
-    let out = "- " + radioUrlToString(urls[0]);
-    for (let i = 1; i < urls.length; i++) {
-        out += "\n- " + radioUrlToString(urls[i]);
+    export function radioUrlToString(url: RadioURL): string {
+        return "`" + url.name + "` by `" + url.station + "`";
     }
-    return out;
+
+    export function radioUrlsToString(urls: Array<RadioURL>): string {
+        let out = "- " + radioUrlToString(urls[0]);
+        for (let i = 1; i < urls.length; i++) {
+            out += "\n- " + radioUrlToString(urls[i]);
+        }
+        return out;
+    }
+    
 }
 
 export namespace Time {
@@ -28,4 +34,13 @@ export namespace Logger {
     export function info(message: string): void {
         console.log(Time.getTimeFormatted() + " [INFO] " + message);
     }
+}
+
+export namespace SimpleDiscordMessage {
+
+    export function simpleEmbed(message: string): EmbedBuilder {
+        return new EmbedBuilder()
+            .setColor(336233)
+    }
+
 }

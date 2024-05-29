@@ -1,7 +1,6 @@
 import { Client, Events, GatewayIntentBits, VoiceChannel } from "discord.js";
 import * as dotenv from "dotenv";
-import { handleCommand, loadCommands, registerCommands } from "./helpers/commandManager.js";
-import { globalConnections, initPlayers } from "./player.js";
+import { CommandManager } from "./helpers/commandManager.js";
 import { BotClient } from "botclient.js";
 import { Logger } from "util.js";
 
@@ -23,7 +22,8 @@ dotenv.config();
         clientid
     });
 
-    client.commandManager.load("commands");
+    client.commandManager.loadCommands("commands").catch(e => Logger.error(e));
+    client.commandManager.registerCommands(client, false, "").catch(e => Logger.error(e));
 
     client.login(token);
 
@@ -34,6 +34,6 @@ dotenv.config();
     client.on(Events.InteractionCreate, async (interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        handleCommand(interaction);
+        client.commandManager.handleCommand(client, interaction).catch(e => Logger.error(e));
     });
 })();
