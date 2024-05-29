@@ -1,6 +1,7 @@
 import { BaseCommand } from "base/baseCommand.js";
 import { BotClient } from "botclient.js";
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { simpleEmbed } from "util.js";
 
 export class PingCommand extends BaseCommand {
     constructor() {
@@ -10,9 +11,9 @@ export class PingCommand extends BaseCommand {
         this.setDescription("Tests bot activity status");
     }
 
-    execute(client: BotClient, interaction: ChatInputCommandInteraction): Promise<void | Error> {
+    async execute(client: BotClient, interaction: ChatInputCommandInteraction): Promise<Error | void> {
         
-        interaction.reply({ embeds: new EmbedBuilder() })
+        interaction.reply({ embeds: simpleEmbed("this is a message") });
 
     }
 }

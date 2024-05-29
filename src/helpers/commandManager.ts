@@ -140,7 +140,14 @@ export class CommandManager {
 
         if (command === undefined) return new Error(`No command found named '${interaction.commandName}'`);
 
-        return command.execute(client, interaction);
+        const timeout = setTimeout(() => {
+            interaction.deferReply();
+        }, 2000);
 
+        return new Promise<void | Error>((res, rej) => {
+            await command.execute(client, interaction)
+            .then(() => {clearTimeout(timeout); res(); })
+            .catch(e => {})
+        });
     }
 }
