@@ -1,6 +1,6 @@
-import { EmbedBuilder } from "discord.js";
-import { RadioURL } from "types.js";
-import { Config } from "config.js";
+import { ChatInputCommandInteraction, EmbedBuilder, InteractionReplyOptions } from "discord.js";
+import { RadioURL } from "./types";
+import { Config } from "./config.js";
 
 export function radioUrlToString(url: RadioURL): string {
     return "`" + url.name + "` by `" + url.station + "`";
@@ -34,4 +34,9 @@ export function simpleEmbed(message: string): EmbedBuilder {
     return new EmbedBuilder()
         .setColor(Config.globalBotEmbedColor)
         .setDescription(message);
+}
+
+export function safeReply(interaction: ChatInputCommandInteraction, options: InteractionReplyOptions) {
+    if (interaction.deferred) interaction.editReply(options);
+    else interaction.reply(options);
 }

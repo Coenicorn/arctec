@@ -1,5 +1,5 @@
 import { Client, ClientOptions, SlashCommandBooleanOption } from "discord.js";
-import { CommandManager } from "helpers/commandManager.js";
+import { CommandManager } from "./helpers/commandManager.js";
 
 export interface BotClientOptions extends ClientOptions {
     token: string;

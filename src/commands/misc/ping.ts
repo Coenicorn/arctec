@@ -1,9 +1,9 @@
-import { BaseCommand } from "base/baseCommand.js";
-import { BotClient } from "botclient.js";
+import { BaseCommand } from "../../base/baseCommand.js";
+import { BotClient } from "../../botclient.js";
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { simpleEmbed } from "util.js";
+import { Logger, safeReply, simpleEmbed } from "../../util.js";
 
-export class PingCommand extends BaseCommand {
+class PingCommand extends BaseCommand {
     constructor() {
         super();
 
@@ -11,9 +11,14 @@ export class PingCommand extends BaseCommand {
         this.setDescription("Tests bot activity status");
     }
 
-    async execute(client: BotClient, interaction: ChatInputCommandInteraction): Promise<Error | void> {
-        
-        interaction.reply({ embeds: simpleEmbed("this is a message") });
+    async execute(
+        client: BotClient,
+        interaction: ChatInputCommandInteraction
+    ) {
+
+        safeReply(interaction, {content: "Bot is up and running!"});
 
     }
 }
+
+export default new PingCommand();

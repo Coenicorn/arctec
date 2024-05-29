@@ -8,9 +8,9 @@ import {
     RESTPostAPIApplicationCommandsJSONBody,
     Routes,
 } from "discord.js";
-import { BaseCommand } from "base/baseCommand.js";
-import { BotClient } from "botclient.js";
-import { Logger } from "util.js";
+import { BaseCommand } from "../base/baseCommand";
+import { BotClient } from "../botclient.js";
+import { Logger, safeReply, simpleEmbed } from "../util.js";
 
 // const globalCommands: Collection<string, Command> = new Collection();
 
@@ -88,30 +88,40 @@ export class CommandManager {
     readonly commands: Collection<string, BaseCommand> = new Collection();
 
     async loadCommands(commandsSubDirectory: string): Promise<void | Error> {
-
-        const foldersPath = path.join(process.cwd(), commandsSubDirectory);
+        const foldersPath = path.join(
+            path.join(__dirname, "../"),
+            commandsSubDirectory
+        );
         const commandFolders = fs.readdirSync(foldersPath);
 
         for (const folder of commandFolders) {
             const commandsPath = path.join(foldersPath, folder);
-            const commandFileNames = fs.readdirSync(commandsPath);
+            const commandFileNames = fs
+                .readdirSync(commandsPath)
+                .filter((v) => v.endsWith(".js"));
 
             for (const commandFile of commandFileNames) {
-
                 const filePath = path.join(commandsPath, commandFile);
 
-                const command: BaseCommand = (await import(filePath)).default.default;
+                const command: BaseCommand = (await import(filePath)).default
+                    .default;
 
                 Logger.info(`loaded command ${command.name}`);
 
                 this.commands.set(command.name, command);
-
             }
         }
     }
 
-    async registerCommands(client: BotClient, global = false, guildid = ""): Promise<Error | void> {
-        if (this.commands.size === 0) return new Error("no commands loaded to be registered");
+    async registerCommands(
+        client: BotClient,
+        global = false,
+        guildid: string | null = null
+    ): Promise<Error | void> {
+        if (this.commands.size === 0)
+            return Promise.reject(
+                new Error("no commands loaded to be registered")
+            );
 
         const commands: Array<RESTPostAPIApplicationCommandsJSONBody> = [];
 
@@ -123,31 +133,56 @@ export class CommandManager {
             let route;
 
             if (global) route = Routes.applicationCommands(client.clientid);
-            else if (guildid === "") /*missing guildid*/ return new Error("Guild id not specified");
-            else route = Routes.applicationGuildCommands(client.clientid, guildid);
+            else if (guildid === null)
+                /*missing guildid*/ return Promise.reject(
+                    new Error("Guild id not specified")
+                );
+            else
+                route = Routes.applicationGuildCommands(
+                    client.clientid,
+                    guildid
+                );
+
+            Logger.info(`registered ${commands.length} commands`);
 
             const rest = new REST().setToken(client.token);
 
             const data = await rest.put(route, { body: commands });
         } catch (e) {
-            return new Error("something went wrong registering the commands");
+            return Promise.reject(
+                new Error("something went wrong registering the commands")
+            );
         }
     }
 
-    async handleCommand(client: BotClient, interaction: ChatInputCommandInteraction): Promise<void | Error> {
-
+    async handleCommand(
+        client: BotClient,
+        interaction: ChatInputCommandInteraction
+    ) {
         const command = this.commands.get(interaction.commandName);
 
-        if (command === undefined) return new Error(`No command found named '${interaction.commandName}'`);
+        if (command === undefined) {
+            Logger.error(`No command found named '${interaction.commandName}'`);
 
+            interaction.reply(`No command found named '${interaction.commandName}'`);
+
+            return;
+        }
+
+        // defer reply if it takes too long
         const timeout = setTimeout(() => {
-            interaction.deferReply();
-        }, 2000);
+            if (!interaction.replied) interaction.deferReply();
+        }, 1000);
 
-        return new Promise<void | Error>((res, rej) => {
-            await command.execute(client, interaction)
-            .then(() => {clearTimeout(timeout); res(); })
-            .catch(e => {})
-        });
+        try {
+            command.execute(client, interaction);
+            
+            clearTimeout(timeout);
+        } catch(e) {
+            Logger.error("Command error");
+            console.error(e);
+
+            safeReply(interaction, {content: "Someting went wrong running this command"});
+        }
     }
 }

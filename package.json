@@ -1,7 +1,7 @@
 {
   "name": "entarctic",
   "module": "index.ts",
-  "type": "module",
+  "type": "commonjs",
   "devDependencies": {
     "@types/jsmediatags": "^3.9.6",
     "@types/node": "^20.12.12"
@@ -10,9 +10,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@discord-player/extractor": "^4.4.7",
     "@discordjs/voice": "^0.17.0",
+    "discord-player": "^6.6.9",
     "discord.js": "^14.15.2",
     "dotenv": "^16.4.5",
+    "mediaplex": "^0.0.9",
     "music-metadata": "^7.14.0",
     "sodium": "^3.0.2"
   },
