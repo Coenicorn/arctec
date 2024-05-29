@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "@discordjs/builders";
+import { EmbedBuilder } from "@discordjs/builders;
 import { RadioURL } from "types.js";
 import { Config } from "config.js";
 
@@ -39,8 +39,7 @@ export namespace Logger {
 export namespace SimpleDiscordMessage {
 
     export function simpleEmbed(message: string): EmbedBuilder {
-        return new EmbedBuilder()
-            .setColor(336233)
+        new EmbedBuilder().setColor("#336233")
     }
 
 }
